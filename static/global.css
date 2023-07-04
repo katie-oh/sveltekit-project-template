@@ -1,0 +1,27 @@
+@media screen and (max-width: 768px) {
+  .desktop {
+    display: none;
+  }
+}
+@media screen and (min-width: 768px), (max-width: 321px) {
+  .tablet {
+    display: none;
+  }
+}
+@media screen and (min-width: 321px) {
+  .mobile {
+    display: none;
+  }
+}
+@media screen and (min-width: 769px) {
+  .mobile-tablet {
+    display: none;
+  }
+}
+@media screen and (max-width: 320px) {
+  .tablet-desktop {
+    display: none;
+  }
+}
+
+/*# sourceMappingURL=global.css.map */

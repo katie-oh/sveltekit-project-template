@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "start vite dev && start sass --watch src/styles/global.scss static/global.css",
 		"build": "vite build",
 		"preview": "vite preview",
 		"test": "playwright test",

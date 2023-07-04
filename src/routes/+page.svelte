@@ -8,6 +8,6 @@
 
 <div class="tablet-desktop">Tablet and desktop only</div>
 
-<script>
+<!-- <script>
 	import "@/styles/global.scss";
-</script>
+</script> -->
