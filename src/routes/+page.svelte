@@ -1,5 +1,12 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<div class="desktop">Desktop only</div>
+
+<div class="tablet">Tablet only</div>
+
+<div class="mobile">Mobile only</div>
+
+<div class="mobile-tablet">Mobile and tablet only</div>
+
+<div class="tablet-desktop">Tablet and desktop only</div>
 
 <script>
 	import "@/styles/global.scss";

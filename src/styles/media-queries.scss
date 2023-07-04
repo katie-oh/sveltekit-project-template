@@ -1,0 +1,72 @@
+// Taken from https://css-tricks.com/approaches-media-queries-sass/
+
+$breakpoints: (
+	"mobile": 320px,
+	// Samsung Fold is 280px lol
+	"tablet": 768px,
+	"desktop": 1024px,
+) !default;
+
+// START responsive classes
+@mixin desktop {
+	@media screen and (min-width: calc(map-get($breakpoints, "tablet") + 1px)) {
+		@content;
+	}
+}
+
+@mixin mobile {
+	@media screen and (max-width: map-get($breakpoints, "mobile")) {
+		@content;
+	}
+}
+
+@mixin mobile-tablet {
+	@media screen and (max-width: map-get($breakpoints, "tablet")) {
+		@content;
+	}
+}
+
+@mixin mobile-desktop {
+	@media screen and (min-width: map-get($breakpoints, "tablet")),
+		(max-width: calc(map-get($breakpoints, "mobile") + 1px)) {
+		@content;
+	}
+}
+
+@mixin tablet-desktop {
+	@media screen and (min-width: calc(map-get($breakpoints, "mobile") + 1px)) {
+		@content;
+	}
+}
+
+
+@include mobile-tablet {
+	.desktop {
+		display: none;
+	}
+}
+
+@include mobile-desktop {
+	.tablet {
+		display: none;
+	}
+}
+
+@include tablet-desktop {
+	.mobile {
+		display: none;
+	}
+}
+
+@include desktop {
+	.mobile-tablet {
+		display: none;
+	}
+}
+
+@include mobile {
+	.tablet-desktop {
+		display: none;
+	}
+}
+// END responsive classes
