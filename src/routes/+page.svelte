@@ -1,13 +1,16 @@
-<div class="desktop">Desktop only</div>
+<!-- <h1>Go opening of the day</h1>
 
-<div class="tablet">Tablet only</div>
+<div>Here's where the SGF would go</div>
 
-<div class="mobile">Mobile only</div>
+SGF -->
 
-<div class="mobile-tablet">Mobile and tablet only</div>
+<Board {sgf} />
 
-<div class="tablet-desktop">Tablet and desktop only</div>
+<script lang="ts">
+	import { Board } from "ko-sgf";
 
-<!-- <script>
-	import "@/styles/global.scss";
-</script> -->
+	const mainBranchTest =
+		"(;GM[1]FF[4]CA[UTF-8]AP[Sabaki:0.52.2]KM[6.5]SZ[19]DT[2023-08-18];B[dd];W[cd];B[dc](;W[de])(;W[cc]))";
+
+	const sgf = mainBranchTest;
+</script>
