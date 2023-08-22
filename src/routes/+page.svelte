@@ -3,6 +3,7 @@
 <Board
 	displayControls={true}
 	isInteractive={false}
+	inverseColors
 	{sgf}
 	{width}
 	{height}

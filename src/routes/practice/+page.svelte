@@ -1,11 +1,15 @@
-B to play
-{#if hasError}
-	<!-- <button on:click={() => handleReset()}>Reset</button> -->
-	<button on:click={handleReset}>Reset</button>
-{:else if success}
-	<p>Success!</p>
-	<!-- <button on:click={() => handleReset(true)}>Try again!</button> -->
-{/if}
+<div class="info-area">
+	B to play inverseColors: {inverseColors}
+	axisToFlipBoard: {axisToFlipBoard}
+	boardRotationAngle: {boardRotationAngle}
+	{#if hasError}
+		<button on:click={() => handleReset()}>Reset</button>
+		<!-- <button on:click={handleReset}>Reset</button> -->
+	{:else if success}
+		<p>Success!</p>
+		<button on:click={() => handleReset(true)}>Try again!</button>
+	{/if}
+</div>
 
 {#key rerender}
 	<Board
@@ -14,8 +18,11 @@ B to play
 		isInteractive={currentMoveNumber < gameBranch.length && !hasError}
 		bind:gameBranch
 		bind:boardBranch
-		{width}
-		{height}
+		turn={inverseColors ? "W" : "B"}
+		{inverseColors}
+		{axisToFlipBoard}
+		{boardRotationAngle}
+		autoSize
 		on:moveMade={handleMoveMade}
 	/>
 {/key}
@@ -35,19 +42,34 @@ B to play
 	let rerender = 0;
 	let currentMoveNumber = 2;
 
-	const handleReset = async () => {
+	let inverseColors = false;
+	let axisToFlipBoard: "x" | "y" | "xy" | null = null;
+	let boardRotationAngle: 0 | 90 | 180 | 270 = 0;
+
+	let boardState: BoardState = {};
+	let haveDimensionsBeenSet = false;
+
+	const handleReset = async (randomize = false) => {
+		if (randomize) {
+			haveDimensionsBeenSet = false;
+			const axisOptions = ["x", "y", "xy", null];
+			const boardRotationAngleOptions = [0, 90, 180, 270];
+
+			inverseColors = Math.random() > 0.5;
+
+			axisToFlipBoard = axisOptions[Math.floor(Math.random() * 4)] as "x" | "y" | "xy" | null;
+			// boardRotationAngle = boardRotationAngleOptions[Math.floor(Math.random() * 4)] as
+			// 	| 0
+			// 	| 90
+			// 	| 180
+			// 	| 270;
+		}
+
+		hasError = false;
+		success = false;
 		rerender++;
 		currentMoveNumber = 2;
 	};
-
-	let boardState: BoardState = {};
-	let minX = 0;
-	let maxX = 19;
-	let minY = 0;
-	let maxY = 19;
-	let width = 19;
-	let height = 19;
-	let haveDimensionsBeenSet = false;
 
 	const handleMoveMade = (event: CustomEvent) => {
 		const { move, boardState: newBoardState } = event.detail;
@@ -57,37 +79,15 @@ B to play
 	};
 
 	$: {
-		if (boardState) {
-			const xValues = Object.keys(boardState).map((x) => parseInt(x));
-			minX = xValues.length > 0 ? Math.min(...xValues) : 0;
-			maxX = xValues.length > 0 ? Math.max(...xValues) : 19;
-
-			const yValues = xValues
-				.map((x) => {
-					return Object.keys(boardState[x]).map((y) => parseInt(y));
-				})
-				.flat();
-			minY = yValues.length > 0 ? Math.min(...yValues) : 0;
-			maxY = yValues.length > 0 ? Math.max(...yValues) : 19;
-
-			if (!haveDimensionsBeenSet && xValues.length > 0 && yValues.length > 0) {
-				haveDimensionsBeenSet = true;
-				width = Math.min(19, maxX + 3);
-				height = Math.min(19, maxY + 3);
-			}
-		}
-	}
-
-	$: {
-		// const currentMoveNumber = boardBranch.length;
 		const boardMoveForCurrentMoveNumber = boardBranch[currentMoveNumber - 1];
 		const gameMoveForCurrentMoveNumber = gameBranch[currentMoveNumber - 1];
 
-		console.log({ boardMoveForCurrentMoveNumber, gameMoveForCurrentMoveNumber });
 		const areBoardMoveAndGameMoveTheSame = areMovesTheSame(
 			boardMoveForCurrentMoveNumber,
 			gameMoveForCurrentMoveNumber,
 		);
+
+		console.log({ boardMoveForCurrentMoveNumber, gameMoveForCurrentMoveNumber, gameBranch });
 
 		hasError =
 			currentMoveNumber > gameBranch.length ||
@@ -95,9 +95,7 @@ B to play
 				gameMoveForCurrentMoveNumber &&
 				!areBoardMoveAndGameMoveTheSame);
 
-		console.log({ gameBranch, currentMoveNumber });
 		if (currentMoveNumber === gameBranch.length && gameBranch.length > 0) {
-			console.log("hey!");
 			success = areBoardMoveAndGameMoveTheSame;
 		}
 	}
@@ -120,3 +118,9 @@ B to play
 		boardBranch = gameBranch.slice(0, 2);
 	});
 </script>
+
+<style lang="scss">
+	.info-area {
+		height: 100px;
+	}
+</style>
