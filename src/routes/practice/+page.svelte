@@ -1,5 +1,5 @@
 <div class="info-area">
-	{inverseColors ? "W" : "B"} to play
+	You are {inverseColors ? "W" : "B"}
 	{#if hasError}
 		<button on:click={() => handleReset()}>Reset</button>
 	{:else if success}
@@ -12,7 +12,7 @@
 	<Board
 		{sgf}
 		initialMoveNumber={2}
-		isInteractive={currentMoveNumber < gameBranch.length && !hasError}
+		isInteractive={isUsersTurn && currentMoveNumber < gameBranch.length && !hasError}
 		bind:gameBranch
 		bind:boardBranch
 		turn={inverseColors ? "W" : "B"}
@@ -25,8 +25,7 @@
 {/key}
 
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { Board } from "ko-sgf";
+	import { Board, goToNextMove } from "ko-sgf";
 	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
 	import type { BoardState } from "ko-sgf/dist/types/board-state";
 
@@ -44,6 +43,8 @@
 	let boardRotationAngle: 0 | 90 | 180 | 270 = 0;
 
 	let boardState: BoardState = {};
+
+	let isUsersTurn = true;
 
 	const handleReset = async (randomize = false) => {
 		if (randomize) {
@@ -68,10 +69,18 @@
 
 	const handleMoveMade = (event: CustomEvent) => {
 		const { move, boardState: newBoardState } = event.detail;
-		console.log({ move, newBoardState });
 		currentMoveNumber = move.number;
 		boardState = newBoardState;
 	};
+
+	$: {
+		isUsersTurn = currentMoveNumber % 2 === 0;
+		if (!isUsersTurn) {
+			setTimeout(() => {
+				goToNextMove();
+			}, 500);
+		}
+	}
 
 	$: {
 		const boardMoveForCurrentMoveNumber = boardBranch[currentMoveNumber - 1];
@@ -81,8 +90,6 @@
 			boardMoveForCurrentMoveNumber,
 			gameMoveForCurrentMoveNumber,
 		);
-
-		console.log({ boardMoveForCurrentMoveNumber, gameMoveForCurrentMoveNumber, gameBranch });
 
 		hasError =
 			currentMoveNumber > gameBranch.length ||
@@ -108,10 +115,6 @@
 	const mainBranchTest =
 		"(;GM[1]FF[4]CA[UTF-8]AP[Sabaki:0.52.2]KM[6.5]SZ[19]DT[2023-08-18];B[dd];W[cd];B[dc](;W[de])(;W[cc]))";
 	let sgf = mainBranchTest;
-
-	onMount(() => {
-		boardBranch = gameBranch.slice(0, 2);
-	});
 </script>
 
 <style lang="scss">
