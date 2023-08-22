@@ -1,10 +1,10 @@
 <div class="info-area">
-	You are {inverseColors ? "W" : "B"}
+	You are {usersColor}
 	{#if hasError}
 		<button on:click={() => handleReset()}>Reset</button>
 	{:else if success}
 		<p>Success!</p>
-		<button on:click={() => handleReset(true)}>Try again!</button>
+		<button on:click={() => handleReset(true)}>Keep practicing!</button>
 	{/if}
 </div>
 
@@ -44,7 +44,8 @@
 
 	let boardState: BoardState = {};
 
-	let isUsersTurn = true;
+	let usersColor = Math.random() > 0.5 ? "B" : "W";
+	let isUsersTurn = Math.random() > 0.5;
 
 	const handleReset = async (randomize = false) => {
 		if (randomize) {
@@ -74,7 +75,18 @@
 	};
 
 	$: {
-		isUsersTurn = currentMoveNumber % 2 === 0;
+		// if user is B, then they go on even moves
+		// if user is W, then they go on odd moves
+		// if color is inversed, then they go on the opposite
+
+		// isUsersTurn = currentMoveNumber % 2 === 0;
+		isUsersTurn = inverseColors
+			? usersColor === "B"
+				? currentMoveNumber % 2 === 1
+				: currentMoveNumber % 2 === 0
+			: usersColor === "B"
+			? currentMoveNumber % 2 === 0
+			: currentMoveNumber % 2 === 1;
 		if (!isUsersTurn) {
 			setTimeout(() => {
 				goToNextMove();
