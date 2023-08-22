@@ -1,10 +1,7 @@
 <div class="info-area">
-	B to play inverseColors: {inverseColors}
-	axisToFlipBoard: {axisToFlipBoard}
-	boardRotationAngle: {boardRotationAngle}
+	{inverseColors ? "W" : "B"} to play
 	{#if hasError}
 		<button on:click={() => handleReset()}>Reset</button>
-		<!-- <button on:click={handleReset}>Reset</button> -->
 	{:else if success}
 		<p>Success!</p>
 		<button on:click={() => handleReset(true)}>Try again!</button>
@@ -28,7 +25,7 @@
 {/key}
 
 <script lang="ts">
-	import { onMount, tick } from "svelte";
+	import { onMount } from "svelte";
 	import { Board } from "ko-sgf";
 	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
 	import type { BoardState } from "ko-sgf/dist/types/board-state";
@@ -47,22 +44,20 @@
 	let boardRotationAngle: 0 | 90 | 180 | 270 = 0;
 
 	let boardState: BoardState = {};
-	let haveDimensionsBeenSet = false;
 
 	const handleReset = async (randomize = false) => {
 		if (randomize) {
-			haveDimensionsBeenSet = false;
 			const axisOptions = ["x", "y", "xy", null];
 			const boardRotationAngleOptions = [0, 90, 180, 270];
 
 			inverseColors = Math.random() > 0.5;
 
 			axisToFlipBoard = axisOptions[Math.floor(Math.random() * 4)] as "x" | "y" | "xy" | null;
-			// boardRotationAngle = boardRotationAngleOptions[Math.floor(Math.random() * 4)] as
-			// 	| 0
-			// 	| 90
-			// 	| 180
-			// 	| 270;
+			boardRotationAngle = boardRotationAngleOptions[Math.floor(Math.random() * 4)] as
+				| 0
+				| 90
+				| 180
+				| 270;
 		}
 
 		hasError = false;
