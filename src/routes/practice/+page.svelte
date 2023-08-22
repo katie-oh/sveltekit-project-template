@@ -28,6 +28,7 @@
 	import { Board, goToNextMove } from "ko-sgf";
 	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
 	import type { BoardState } from "ko-sgf/dist/types/board-state";
+	import { getSgfOfTheDay } from "@/helpers/sgf";
 
 	// TODO shouldn't be binding these lol
 	let gameBranch: GameBranch = [];
@@ -75,11 +76,6 @@
 	};
 
 	$: {
-		// if user is B, then they go on even moves
-		// if user is W, then they go on odd moves
-		// if color is inversed, then they go on the opposite
-
-		// isUsersTurn = currentMoveNumber % 2 === 0;
 		isUsersTurn = inverseColors
 			? usersColor === "B"
 				? currentMoveNumber % 2 === 1
@@ -87,6 +83,7 @@
 			: usersColor === "B"
 			? currentMoveNumber % 2 === 0
 			: currentMoveNumber % 2 === 1;
+
 		if (!isUsersTurn) {
 			setTimeout(() => {
 				goToNextMove();
@@ -124,9 +121,7 @@
 		);
 	};
 
-	const mainBranchTest =
-		"(;GM[1]FF[4]CA[UTF-8]AP[Sabaki:0.52.2]KM[6.5]SZ[19]DT[2023-08-18];B[dd];W[cd];B[dc](;W[de])(;W[cc]))";
-	let sgf = mainBranchTest;
+	let sgf = getSgfOfTheDay();
 </script>
 
 <style lang="scss">
