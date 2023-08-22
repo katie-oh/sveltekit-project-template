@@ -23,9 +23,10 @@ B to play
 <script lang="ts">
 	import { onMount, tick } from "svelte";
 	import { Board } from "ko-sgf";
-	import type { GameBranch, GameNode, GameTree } from "ko-sgf/dist/types/game-tree";
+	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
 	import type { BoardState } from "ko-sgf/dist/types/board-state";
 
+	// TODO shouldn't be binding these lol
 	let gameBranch: GameBranch = [];
 	let boardBranch: GameBranch = gameBranch.slice(0, 2);
 
@@ -35,13 +36,7 @@ B to play
 	let currentMoveNumber = 2;
 
 	const handleReset = async () => {
-		console.log("handleReset");
-		// boardState = {};
 		rerender++;
-		// await tick();
-
-		// boardBranch = gameBranch.slice(0, 2);
-		console.log("setting currentMoveNumber to 2");
 		currentMoveNumber = 2;
 	};
 
@@ -54,11 +49,12 @@ B to play
 	let height = 19;
 	let haveDimensionsBeenSet = false;
 
-	const handleMoveMade = (move: CustomEvent) => {
-		const { number } = move.detail;
-		console.log({number})
-		currentMoveNumber = number;
-	}
+	const handleMoveMade = (event: CustomEvent) => {
+		const { move, boardState: newBoardState } = event.detail;
+		console.log({ move, newBoardState });
+		currentMoveNumber = move.number;
+		boardState = newBoardState;
+	};
 
 	$: {
 		if (boardState) {
@@ -87,12 +83,17 @@ B to play
 		const boardMoveForCurrentMoveNumber = boardBranch[currentMoveNumber - 1];
 		const gameMoveForCurrentMoveNumber = gameBranch[currentMoveNumber - 1];
 
+		console.log({ boardMoveForCurrentMoveNumber, gameMoveForCurrentMoveNumber });
 		const areBoardMoveAndGameMoveTheSame = areMovesTheSame(
 			boardMoveForCurrentMoveNumber,
 			gameMoveForCurrentMoveNumber,
 		);
 
-		hasError = currentMoveNumber > gameBranch.length || !areBoardMoveAndGameMoveTheSame;
+		hasError =
+			currentMoveNumber > gameBranch.length ||
+			(boardMoveForCurrentMoveNumber &&
+				gameMoveForCurrentMoveNumber &&
+				!areBoardMoveAndGameMoveTheSame);
 
 		console.log({ gameBranch, currentMoveNumber });
 		if (currentMoveNumber === gameBranch.length && gameBranch.length > 0) {
@@ -104,10 +105,10 @@ B to play
 	const areMovesTheSame = (move1: GameNode, move2: GameNode) => {
 		return (
 			(move1 == null && move2 == null) ||
-			(move1.color === move2.color &&
-				move1.number === move2.number &&
-				move1.x === move2.x &&
-				move1.y === move2.y)
+			(move1?.color === move2?.color &&
+				move1?.number === move2?.number &&
+				move1?.x === move2?.x &&
+				move1?.y === move2?.y)
 		);
 	};
 

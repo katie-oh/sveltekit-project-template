@@ -6,7 +6,6 @@
 	{sgf}
 	{width}
 	{height}
-	bind:boardState
 	bind:gameTree
 	bind:gameBranch
 />
