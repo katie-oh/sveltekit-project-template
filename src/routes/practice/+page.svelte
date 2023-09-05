@@ -1,28 +1,32 @@
 <div class="info-area">
 	You are {usersColor}
-	{#if hasError}
-		<button on:click={() => handleReset()}>Reset</button>
-	{:else if success}
+	{#if success}
 		<p>Success!</p>
 		<button on:click={() => handleReset(true)}>Keep practicing!</button>
 	{/if}
 </div>
 
 {#key rerender}
-	<Board
-		{sgf}
-		{initialMoveNumber}
-		isInteractive={isUsersTurn && $currentMoveNumber < $gameBranch?.length && !hasError}
-		isNavigable={false}
-		bind:boardBranch
-		overwriteBoardStateHistory={false}
-		turn={inverseColors ? "W" : "B"}
-		{inverseColors}
-		{axisToFlipBoard}
-		{boardRotationAngle}
-		autoSize
-		on:moveMade={handleMoveMade}
-	/>
+	<div class="board-container">
+		<Board
+			{sgf}
+			{initialMoveNumber}
+			isInteractive={isUsersTurn && $currentMoveNumber < $gameBranch?.length && !hasError}
+			isNavigable={false}
+			bind:boardBranch
+			overwriteBoardStateHistory={false}
+			turn={inverseColors ? "W" : "B"}
+			{inverseColors}
+			{axisToFlipBoard}
+			{boardRotationAngle}
+			autoSize
+			on:moveMade={handleMoveMade}
+		/>
+
+		{#if hasError}
+			<div class="x" />
+		{/if}
+	</div>
 {/key}
 
 <script lang="ts">
@@ -167,5 +171,56 @@
 <style lang="scss">
 	.info-area {
 		height: 100px;
+	}
+
+	.board-container {
+		position: relative;
+		width: fit-content;
+		height: fit-content;
+
+		@keyframes flash {
+			0% {
+				opacity: 80%;
+			}
+			10% {
+				opacity: 0%;
+			}
+			50% {
+				opacity: 80%;
+			}
+			100% {
+				opacity: 0%;
+			}
+		}
+
+		.x {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 100%;
+			height: 500px;
+			animation: flash 0.25s;
+			z-index: 99;
+
+			&:before,
+			&:after {
+				border-radius: 1rem;
+				position: absolute;
+				left: 50%;
+				content: " ";
+				height: 500px;
+				width: 1rem;
+				background-color: red;
+			}
+
+			&:before {
+				transform: rotate(45deg);
+			}
+
+			&:after {
+				transform: rotate(-45deg);
+			}
+		}
 	}
 </style>
