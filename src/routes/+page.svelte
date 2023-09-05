@@ -1,7 +1,6 @@
 <h2>Opening of the day</h2>
 
 <Board
-	displayControls={true}
 	isInteractive={false}
 	initialMoveNumber={0}
 	autoSize

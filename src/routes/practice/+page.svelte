@@ -11,10 +11,11 @@
 {#key rerender}
 	<Board
 		{sgf}
-		initialMoveNumber={2}
-		isInteractive={isUsersTurn && currentMoveNumber < gameBranch.length && !hasError}
-		bind:gameBranch
+		{initialMoveNumber}
+		isInteractive={isUsersTurn && $currentMoveNumber < $gameBranch?.length && !hasError}
+		isNavigable={false}
 		bind:boardBranch
+		overwriteBoardStateHistory={false}
 		turn={inverseColors ? "W" : "B"}
 		{inverseColors}
 		{axisToFlipBoard}
@@ -25,91 +26,130 @@
 {/key}
 
 <script lang="ts">
-	import { Board, goToNextMove } from "ko-sgf";
+	import { Board, goToNextMove, goToPreviousMove, gameBranch, currentMoveNumber } from "ko-sgf";
 	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
 	import type { BoardState } from "ko-sgf/dist/types/board-state";
 	import { getSgfOfTheDay } from "@/helpers/sgf";
 
 	// TODO shouldn't be binding these lol
-	let gameBranch: GameBranch = [];
-	let boardBranch: GameBranch = gameBranch.slice(0, 2);
+	let boardBranch: GameBranch = $gameBranch?.slice(0, 2);
 
 	let hasError = false;
 	let success = false;
 	let rerender = 0;
-	let currentMoveNumber = 2;
+	let moveNumberToPlay = $currentMoveNumber + 1;
 
 	let inverseColors = false;
-	let axisToFlipBoard: "x" | "y" | "xy" | null = null;
+	let axisToFlipBoard: "x" | "y" | "xy" | "positive" | "negative" | null = null;
 	let boardRotationAngle: 0 | 90 | 180 | 270 = 0;
+
+	let isWaitingOnChange = false;
 
 	let boardState: BoardState = {};
 
 	let usersColor = Math.random() > 0.5 ? "B" : "W";
-	let isUsersTurn = Math.random() > 0.5;
+	let initialMoveNumber = usersColor === "B" ? 2 : 1;
+	let isUsersTurn =
+		usersColor === "B" ? $currentMoveNumber % 2 === 0 : $currentMoveNumber % 2 === 1;
+	if (inverseColors) {
+		initialMoveNumber++;
+		isUsersTurn = !isUsersTurn;
+	}
+
+	console.log({ isUsersTurn, $currentMoveNumber });
 
 	const handleReset = async (randomize = false) => {
-		if (randomize) {
-			const axisOptions = ["x", "y", "xy", null];
-			const boardRotationAngleOptions = [0, 90, 180, 270];
-
-			inverseColors = Math.random() > 0.5;
-
-			axisToFlipBoard = axisOptions[Math.floor(Math.random() * 4)] as "x" | "y" | "xy" | null;
-			boardRotationAngle = boardRotationAngleOptions[Math.floor(Math.random() * 4)] as
-				| 0
-				| 90
-				| 180
-				| 270;
-		}
-
-		hasError = false;
-		success = false;
-		rerender++;
-		currentMoveNumber = 2;
-	};
-
-	const handleMoveMade = (event: CustomEvent) => {
-		const { move, boardState: newBoardState } = event.detail;
-		currentMoveNumber = move.number;
-		boardState = newBoardState;
+		// if (randomize) {
+		// 	const axisOptions = ["x", "y", "xy", "positive", "negative", null];
+		// 	const boardRotationAngleOptions = [0, 90, 180, 270];
+		// 	inverseColors = Math.random() > 0.5;
+		// 	axisToFlipBoard = axisOptions[Math.floor(Math.random() * axisOptions.length)] as
+		// 		| "x"
+		// 		| "y"
+		// 		| "xy"
+		// 		| "positive"
+		// 		| "negative"
+		// 		| null;
+		// 	boardRotationAngle = boardRotationAngleOptions[Math.floor(Math.random() * 4)] as
+		// 		| 0
+		// 		| 90
+		// 		| 180
+		// 		| 270;
+		// }
+		// hasError = false;
+		// success = false;
+		// rerender++;
+		// currentMoveNumber = 2;
 	};
 
 	$: {
 		isUsersTurn = inverseColors
 			? usersColor === "B"
-				? currentMoveNumber % 2 === 1
-				: currentMoveNumber % 2 === 0
+				? $currentMoveNumber % 2 === 1
+				: $currentMoveNumber % 2 === 0
 			: usersColor === "B"
-			? currentMoveNumber % 2 === 0
-			: currentMoveNumber % 2 === 1;
-
-		if (!isUsersTurn) {
-			setTimeout(() => {
-				goToNextMove();
-			}, 500);
-		}
+			? $currentMoveNumber % 2 === 0
+			: $currentMoveNumber % 2 === 1;
 	}
 
-	$: {
-		const boardMoveForCurrentMoveNumber = boardBranch[currentMoveNumber - 1];
-		const gameMoveForCurrentMoveNumber = gameBranch[currentMoveNumber - 1];
+	const handleMoveMade = (event: CustomEvent) => {
+		const { move } = event.detail;
 
-		const areBoardMoveAndGameMoveTheSame = areMovesTheSame(
-			boardMoveForCurrentMoveNumber,
-			gameMoveForCurrentMoveNumber,
-		);
+		if (move && move.number <= $gameBranch.length) {
+			const correctMove = $gameBranch[move.number - 1];
+			const didUserPlayCorrectMove = areMovesTheSame(move, correctMove);
 
-		hasError =
-			currentMoveNumber > gameBranch.length ||
-			(boardMoveForCurrentMoveNumber &&
-				gameMoveForCurrentMoveNumber &&
-				!areBoardMoveAndGameMoveTheSame);
+			if (move.number === $gameBranch.length && didUserPlayCorrectMove) {
+				success = true;
+			} else if (move.number < $gameBranch.length) {
+				if (!isWaitingOnChange) {
+					isWaitingOnChange = true;
+					hasError = !didUserPlayCorrectMove;
 
-		if (currentMoveNumber === gameBranch.length && gameBranch.length > 0) {
-			success = areBoardMoveAndGameMoveTheSame;
+					setTimeout(() => {
+						if (didUserPlayCorrectMove) {
+							goToNextMove();
+						} else {
+							goToPreviousMove();
+						}
+
+						isWaitingOnChange = false;
+						hasError = false;
+					}, 500);
+				}
+			}
 		}
-	}
+	};
+
+	// const getIsUsersTurn = (usersColor: "B" | "W" | "Both", moveNumberToPlay: number) => {
+	// 	return usersColor === "Both"
+	// 		? true
+	// 		: usersColor === "B"
+	// 		? moveNumberToPlay % 2 === 1
+	// 		: moveNumberToPlay % 2 === 0;
+	// };
+
+	// $: {
+	// 	const boardMoveForCurrentMoveNumber = boardBranch[currentMoveNumber - 1];
+	// 	const gameMoveForCurrentMoveNumber = $gameBranch[currentMoveNumber - 1];
+
+	// 	const areBoardMoveAndGameMoveTheSame = areMovesTheSame(
+	// 		boardMoveForCurrentMoveNumber,
+	// 		gameMoveForCurrentMoveNumber,
+	// 	);
+
+	// 	// if they're not the same, check if it's the same as when the move is flipped across diagonal lines
+
+	// 	hasError =
+	// 		currentMoveNumber > $gameBranch.length ||
+	// 		(boardMoveForCurrentMoveNumber &&
+	// 			gameMoveForCurrentMoveNumber &&
+	// 			!areBoardMoveAndGameMoveTheSame);
+
+	// 	if (currentMoveNumber === $gameBranch.length && $gameBranch.length > 0) {
+	// 		success = areBoardMoveAndGameMoveTheSame;
+	// 	}
+	// }
 
 	const areMovesTheSame = (move1: GameNode, move2: GameNode) => {
 		return (

@@ -29,5 +29,44 @@ body {
   margin: 0;
   font-family: "Roboto", "Arial", sans-serif;
 }
+html h1,
+html h2,
+html h3,
+html h4,
+html h5,
+html h6,
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+  margin: 0;
+}
+html input,
+body input {
+  padding: 0.5rem;
+}
+html button,
+body button {
+  height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-transform: uppercase;
+  background-color: lightblue;
+  cursor: pointer;
+}
+html button:hover,
+body button:hover {
+  cursor: pointer;
+}
+html button.primary,
+body button.primary {
+  background-color: lightblue;
+}
+html button.secondary,
+body button.secondary {
+  background-color: lightpink;
+}
 
 /*# sourceMappingURL=global.css.map */
