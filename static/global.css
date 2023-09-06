@@ -26,6 +26,11 @@
 }
 html,
 body {
+  line-height: 1.5rem;
+}
+
+html,
+body {
   margin: 0;
   font-family: "Roboto", "Arial", sans-serif;
 }

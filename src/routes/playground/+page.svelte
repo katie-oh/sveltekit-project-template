@@ -1,4 +1,6 @@
-<Board displayControls />
+<div class="board-page">
+	<Board displayControls />
+</div>
 
 <script lang="ts">
 	import { Board } from "ko-sgf";

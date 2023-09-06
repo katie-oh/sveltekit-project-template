@@ -1,13 +1,8 @@
-<h2>Opening of the day</h2>
+<div class="board-page">
+	<h2>Opening of the day</h2>
 
-<Board
-	isInteractive={false}
-	initialMoveNumber={0}
-	autoSize
-	{sgf}
-	bind:gameTree
-	bind:gameBranch
-/>
+	<Board isInteractive={false} initialMoveNumber={0} autoSize {sgf} bind:gameTree bind:gameBranch />
+</div>
 
 <script lang="ts">
 	import { getSgfOfTheDay } from "@/helpers/sgf";
@@ -19,3 +14,9 @@
 
 	const sgf = getSgfOfTheDay();
 </script>
+
+<style lang="scss">
+	h2 {
+		padding-bottom: 1rem;
+	}
+</style>

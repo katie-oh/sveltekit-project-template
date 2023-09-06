@@ -1,38 +1,56 @@
-<div class="background" />
+<div class="root-layout">
+	<div class="background" />
 
-<nav>
-	<a href="/">today's opening</a>
-	<a href="/practice">practice</a>
-	<a href="/playground">playground</a>
-</nav>
+	<nav>
+		<div class="link-container">
+			<a href="/">today's opening</a>
+			<a href="/practice">practice</a>
+			<a href="/playground">playground</a>
+		</div>
 
-<div class="main-container">
-	<slot />
+		<div class="link-container">
+			<a href="/about">about</a>
+		</div>
+	</nav>
+
+	<div class="main-container">
+		<slot />
+	</div>
 </div>
 
 <style lang="scss">
-	.background {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image: linear-gradient(to top right, lightblue, lightcyan);
-		background-size: cover;
-		background-position: center;
-		filter: blur(5px);
-		z-index: -1;
-	}
-
-	nav {
+	.root-layout {
 		padding: 1rem;
-		display: flex;
-		gap: 2rem;
-	}
-	.main-container {
-		padding: 0 1rem 1rem;
-		max-width: 600px;
-		width: max-content;
 		margin: auto;
+		width: max-content;
+
+		.background {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-image: linear-gradient(to top right, lightblue, lightcyan);
+			background-size: cover;
+			background-position: center;
+			filter: blur(5px);
+			z-index: -1;
+		}
+
+		nav {
+			display: flex;
+			justify-content: space-between;
+			width: 100%;
+			padding-bottom: 1rem;
+
+			.link-container {
+				display: flex;
+				gap: 2rem;
+			}
+		}
+
+		.main-container {
+			max-width: $max-page-width;
+		}
 	}
 </style>

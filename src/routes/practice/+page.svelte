@@ -1,38 +1,46 @@
-<div class="info-area">
-	You are {usersColor}
-	{#if success}
-		<p>Success!</p>
-		<button on:click={handleReset}>Keep practicing!</button>
-	{/if}
-</div>
-
-{#key rerender}
-	<div class="board-container">
-		<Board
-			{sgf}
-			{initialMoveNumber}
-			isInteractive={isUsersTurn && $currentMoveNumber < $gameBranch?.length && !hasError}
-			isNavigable={false}
-			bind:boardBranch
-			overwriteBoardStateHistory={false}
-			turn={turnColor}
-			{inverseColors}
-			{axisToFlipBoard}
-			{boardRotationAngle}
-			autoSize
-			on:moveMade={handleMoveMade}
-		/>
-
-		{#if hasError}
-			<div class="x" />
+<div class="board-page">
+	<div class="info-area">
+		You are {usersColor}
+		{#if success}
+			<p>Success!</p>
+			<button on:click={handleReset}>Keep practicing!</button>
 		{/if}
 	</div>
-{/key}
+
+	{#key rerender}
+		<div class="board-container">
+			<Board
+				{sgf}
+				{initialMoveNumber}
+				isInteractive={isUsersTurn && $currentMoveNumber < $gameBranch?.length && !hasError}
+				isNavigable={false}
+				bind:boardBranch
+				overwriteBoardStateHistory={false}
+				turn={turnColor}
+				{inverseColors}
+				{axisToFlipBoard}
+				{boardRotationAngle}
+				autoSize
+				on:moveMade={handleMoveMade}
+			/>
+
+			{#if hasError}
+				<div class="x" />
+			{/if}
+		</div>
+	{/key}
+</div>
 
 <script lang="ts">
-	import { Board, goToNextMove, goToPreviousMove, gameBranch, currentMoveNumber } from "ko-sgf";
+	import {
+		Board,
+		goToNextMove,
+		goToPreviousMove,
+		gameBranch,
+		currentMoveNumber,
+		boardState,
+	} from "ko-sgf";
 	import type { GameBranch, GameNode } from "ko-sgf/dist/types/game-tree";
-	import type { BoardState } from "ko-sgf/dist/types/board-state";
 	import { getSgfOfTheDay } from "@/helpers/sgf";
 	import { onMount } from "svelte";
 
@@ -48,8 +56,6 @@
 	let boardRotationAngle: 0 | 90 | 180 | 270 = 0;
 
 	let isWaitingOnChange = false;
-
-	let boardState: BoardState = {};
 
 	let usersColor: "B" | "W" = "B";
 	let initialMoveNumber: number;
@@ -110,12 +116,13 @@
 
 	const handleMoveMade = (event: CustomEvent) => {
 		const { move } = event.detail;
-		
+
 		if (move && move.number <= $gameBranch.length && !success) {
 			const correctMove = $gameBranch[move.number - 1];
-			const didUserPlayCorrectMove = areMovesTheSame(move, correctMove);
 
-			if (move.number === $gameBranch.length && didUserPlayCorrectMove) {
+			const didUserPlayCorrectMove = checkIfUserPlayedCorrectMove(move, correctMove);
+
+			if (move.number === $gameBranch.length && (didUserPlayCorrectMove || isWaitingOnChange)) {
 				success = true;
 			} else if (move.number < $gameBranch.length) {
 				if (!isWaitingOnChange) {
@@ -134,6 +141,123 @@
 					}, 500);
 				}
 			}
+		}
+	};
+
+	const checkIfUserPlayedCorrectMove = (usersMove: GameNode, gameMove: GameNode) => {
+		if (!isWaitingOnChange) {
+			const didUserPlayGameMove = areMovesTheSame(usersMove, gameMove);
+
+			if (didUserPlayGameMove) {
+				return true;
+			} else {
+				const { areAllMovesOnPositiveAxis, areAllMovesOnNegativeAxis } =
+					checkIfCorrectMovesAreOnPositiveOrNegativeAxis(usersMove);
+
+				const isUsersMoveCorrectAfterFlip = checkIfUsersMoveIsCorrectAfterFlip(
+					usersMove,
+					gameMove,
+					areAllMovesOnPositiveAxis,
+					areAllMovesOnNegativeAxis,
+				);
+
+				if (isUsersMoveCorrectAfterFlip) {
+					if (areAllMovesOnNegativeAxis) {
+						axisToFlipBoard = "negative";
+					} else if (areAllMovesOnPositiveAxis) {
+						axisToFlipBoard = "positive";
+					}
+
+					rerender++;
+
+					isWaitingOnChange = true;
+					setTimeout(() => {
+						// User's move, but flipped
+						goToNextMove();
+
+						setTimeout(() => {
+							// Computer's move
+							goToNextMove();
+
+							isWaitingOnChange = false;
+						}, 500);
+
+						hasError = false;
+					}, 0);
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+	};
+
+	const checkIfCorrectMovesAreOnPositiveOrNegativeAxis = (usersMove: GameNode) => {
+		const coordinatesOnPositiveAxis: { [x: number]: number } = {};
+		const coordinatesOnNegativeAxis: { [x: number]: number } = {};
+
+		[...Array(19).keys()].forEach((x) => {
+			coordinatesOnPositiveAxis[x] = 18 - x;
+			coordinatesOnNegativeAxis[x] = x;
+		});
+
+		let boardStateAsArrayOfCoordinates: [number, number][] = [];
+
+		Object.keys({ ...$boardState }).forEach((x) => {
+			Object.keys({ ...$boardState[x] }).forEach((y) => {
+				if (parseInt(x) !== usersMove.x || parseInt(y) !== usersMove.y) {
+					boardStateAsArrayOfCoordinates.push([parseInt(x), parseInt(y)]);
+				}
+			});
+		});
+
+		let areAllMovesOnPositiveAxis = true;
+		let areAllMovesOnNegativeAxis = true;
+
+		for (let i = 0; i < boardStateAsArrayOfCoordinates.length; i++) {
+			const [x, y] = boardStateAsArrayOfCoordinates[i];
+
+			if (coordinatesOnPositiveAxis[x] !== y) {
+				areAllMovesOnPositiveAxis = false;
+			}
+
+			if (coordinatesOnNegativeAxis[x] !== y) {
+				areAllMovesOnNegativeAxis = false;
+			}
+
+			if (!coordinatesOnNegativeAxis && !coordinatesOnPositiveAxis) {
+				break;
+			}
+		}
+
+		return { areAllMovesOnPositiveAxis, areAllMovesOnNegativeAxis };
+	};
+
+	const checkIfUsersMoveIsCorrectAfterFlip = (
+		usersMove: GameNode,
+		gameMove: GameNode,
+		areAllMovesOnPositiveAxis: boolean,
+		areAllMovesOnNegativeAxis: boolean,
+	) => {
+		if (areAllMovesOnPositiveAxis) {
+			return areMovesTheSame(
+				{
+					...usersMove,
+					x: 18 - usersMove.y,
+					y: 18 - usersMove.x,
+				},
+				gameMove,
+			);
+		} else if (areAllMovesOnNegativeAxis) {
+			return areMovesTheSame(
+				{
+					...usersMove,
+					x: usersMove.y,
+					y: usersMove.x,
+				},
+				gameMove,
+			);
 		}
 	};
 
